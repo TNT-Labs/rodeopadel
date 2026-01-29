@@ -100,12 +100,16 @@ function generateMatches() {
     state.matches.forEach(match => {
         // Se esiste già un risultato per questa partita, preservalo
         if (existingResults[match.id]) {
-            state.results[match.id] = existingResults[match.id];
+            state.results[match.id] = {
+                ...existingResults[match.id],
+                confirmed: existingResults[match.id].confirmed || false
+            };
         } else {
             // Altrimenti inizializza con valori vuoti
             state.results[match.id] = {
                 score1: '',
-                score2: ''
+                score2: '',
+                confirmed: false
             };
         }
     });
@@ -133,11 +137,15 @@ function createMatchCard(match) {
     const score1 = parseInt(result.score1);
     const score2 = parseInt(result.score2);
     const isCompleted = result.score1 && result.score2 && !isNaN(score1) && !isNaN(score2) && score1 !== score2;
-    const team1Wins = isCompleted && score1 > score2;
-    const team2Wins = isCompleted && score2 > score1;
+    const isConfirmed = result.confirmed === true;
+    const team1Wins = isCompleted && isConfirmed && score1 > score2;
+    const team2Wins = isCompleted && isConfirmed && score2 > score1;
     
-    // Icona vincitore
+    // Icona vincitore (solo se confermato)
     const winnerIcon = '<span class="winner-icon">🏆</span>';
+    
+    // Mostra pulsante conferma solo se completata ma non confermata
+    const showConfirmButton = isCompleted && !isConfirmed;
     
     card.innerHTML = `
         <div class="match-teams">
@@ -179,6 +187,13 @@ function createMatchCard(match) {
                 >
             </div>
         </div>
+        ${showConfirmButton ? `
+            <div class="confirm-container">
+                <button type="button" class="btn btn-confirm" data-match="${match.id}">
+                    ✓ Conferma Risultato
+                </button>
+            </div>
+        ` : ''}
     `;
     
     // Aggiungi event listeners agli input
@@ -187,6 +202,12 @@ function createMatchCard(match) {
         input.addEventListener('input', handleScoreChange);
         input.addEventListener('blur', validateScore);
     });
+    
+    // Aggiungi event listener al pulsante conferma se presente
+    if (showConfirmButton) {
+        const confirmBtn = card.querySelector('.btn-confirm');
+        confirmBtn.addEventListener('click', () => confirmMatch(match.id));
+    }
     
     return card;
 }
@@ -204,7 +225,34 @@ function handleScoreChange(e) {
         state.results[matchId].score2 = value;
     }
     
-    // Aggiorna la classifica
+    // Se i punteggi cambiano dopo la conferma, resetta la conferma
+    if (state.results[matchId].confirmed) {
+        state.results[matchId].confirmed = false;
+    }
+    
+    // Aggiorna la classifica e le partite
+    renderMatches();
+    renderRanking();
+    saveState();
+}
+
+// Conferma il risultato di una partita
+function confirmMatch(matchId) {
+    const result = state.results[matchId];
+    const score1 = parseInt(result.score1);
+    const score2 = parseInt(result.score2);
+    
+    // Valida che la partita sia completata
+    if (!result.score1 || !result.score2 || isNaN(score1) || isNaN(score2) || score1 === score2) {
+        alert('Inserisci un risultato valido prima di confermare!');
+        return;
+    }
+    
+    // Conferma la partita
+    state.results[matchId].confirmed = true;
+    
+    // Aggiorna la visualizzazione
+    renderMatches();
     renderRanking();
     saveState();
 }
@@ -265,14 +313,14 @@ function calculateStats() {
         };
     });
     
-    // Analizza ogni partita completata
+    // Analizza ogni partita completata E confermata
     state.matches.forEach(match => {
         const result = state.results[match.id];
         const score1 = parseInt(result.score1);
         const score2 = parseInt(result.score2);
         
-        // Se la partita è completata (entrambi i punteggi inseriti)
-        if (result.score1 && result.score2 && !isNaN(score1) && !isNaN(score2)) {
+        // Se la partita è completata E confermata (entrambi i punteggi inseriti e confermati)
+        if (result.confirmed && result.score1 && result.score2 && !isNaN(score1) && !isNaN(score2)) {
             const diff = score1 - score2;
             
             // Aggiorna statistiche per ogni giocatore del team 1

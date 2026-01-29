@@ -145,6 +145,25 @@ header h1 {
     box-shadow: var(--shadow-hover);
 }
 
+.btn-confirm {
+    background-color: var(--success-color);
+    color: white;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.btn-confirm:hover {
+    background-color: #45a049;
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.confirm-container {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px dashed var(--border-color);
+}
+
 /* Partite */
 .match-card {
     background: var(--bg-color);
