@@ -1,7 +1,7 @@
 {
-  "name": "Mini Torneo 2vs2",
-  "short_name": "Torneo 2vs2",
-  "description": "Gestione mini-torneo 2vs2 con 4 giocatori",
+  "name": "Rodeo 2vs2",
+  "short_name": "Rodeo 2vs2",
+  "description": "Quelliscarsidelpadel si mettono alla prova",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#F5F5F5",
