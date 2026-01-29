@@ -7,8 +7,8 @@ let state = {
 
 // Inizializzazione
 document.addEventListener('DOMContentLoaded', () => {
-    loadState();
     setupEventListeners();
+    loadState();
     if (state.players.length === 4) {
         initializeTournament();
     }
@@ -70,8 +70,10 @@ function initializeTournament() {
 // Genera tutte le combinazioni di partite 2vs2
 // Per 4 giocatori: A+B vs C+D, A+C vs B+D, A+D vs B+C
 function generateMatches() {
+    // Salva i risultati esistenti prima di resettare
+    const existingResults = { ...state.results };
+    
     state.matches = [];
-    state.results = {};
     
     const [A, B, C, D] = state.players;
     
@@ -94,12 +96,18 @@ function generateMatches() {
         }
     ];
     
-    // Inizializza i risultati
+    // Inizializza i risultati, preservando quelli esistenti se presenti
     state.matches.forEach(match => {
-        state.results[match.id] = {
-            score1: '',
-            score2: ''
-        };
+        // Se esiste già un risultato per questa partita, preservalo
+        if (existingResults[match.id]) {
+            state.results[match.id] = existingResults[match.id];
+        } else {
+            // Altrimenti inizializza con valori vuoti
+            state.results[match.id] = {
+                score1: '',
+                score2: ''
+            };
+        }
     });
 }
 
@@ -347,29 +355,35 @@ function renderRanking() {
 
 // Reset del torneo
 function resetTournament() {
-    if (confirm('Sei sicuro di voler resettare il torneo? Tutti i risultati verranno persi.')) {
-        state.players = [];
-        state.matches = [];
-        state.results = {};
-        
-        // Reset form
-        document.getElementById('player1').value = '';
-        document.getElementById('player2').value = '';
-        document.getElementById('player3').value = '';
-        document.getElementById('player4').value = '';
-        
-        const form = document.getElementById('players-form');
-        const inputs = form.querySelectorAll('input');
-        inputs.forEach(input => input.disabled = false);
-        form.querySelector('button').disabled = false;
-        
-        // Nascondi sezioni
-        document.getElementById('matches-section').style.display = 'none';
-        document.getElementById('ranking-section').style.display = 'none';
-        
-        // Salva stato
-        saveState();
+    // Richiedi conferma prima di resettare
+    const confirmed = confirm('Sei sicuro di voler resettare il torneo? Tutti i risultati verranno persi.');
+    
+    if (!confirmed) {
+        return; // Se l'utente annulla, non fare nulla
     }
+    
+    // Reset completo dello stato
+    state.players = [];
+    state.matches = [];
+    state.results = {};
+    
+    // Reset form ai valori di default
+    document.getElementById('player1').value = 'Fabio';
+    document.getElementById('player2').value = 'Beppe';
+    document.getElementById('player3').value = 'Trillo';
+    document.getElementById('player4').value = 'Umby';
+    
+    const form = document.getElementById('players-form');
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => input.disabled = false);
+    form.querySelector('button').disabled = false;
+    
+    // Nascondi sezioni
+    document.getElementById('matches-section').style.display = 'none';
+    document.getElementById('ranking-section').style.display = 'none';
+    
+    // Pulisci il localStorage
+    localStorage.removeItem('tournamentState');
 }
 
 // Salva lo stato nel localStorage
@@ -387,7 +401,20 @@ function loadState() {
         const saved = localStorage.getItem('tournamentState');
         if (saved) {
             const parsed = JSON.parse(saved);
-            state = parsed;
+            // Preserva i risultati esistenti se ci sono
+            const existingResults = state.results || {};
+            
+            // Carica lo stato salvato
+            state = {
+                players: parsed.players || [],
+                matches: parsed.matches || [],
+                results: parsed.results || {}
+            };
+            
+            // Se ci sono risultati salvati, preservali
+            if (Object.keys(parsed.results || {}).length > 0) {
+                state.results = parsed.results;
+            }
             
             // Ripristina i valori nel form se ci sono giocatori salvati
             if (state.players && state.players.length === 4) {
