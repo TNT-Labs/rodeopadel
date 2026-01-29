@@ -315,6 +315,105 @@ header h1 {
     background-color: #CD7F32;
 }
 
+/* Banner vincitore torneo (quando tutte le partite sono finite) */
+.tournament-winner-banner {
+    text-align: center;
+    padding: 24px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+    background-size: 200% 200%;
+    border-radius: 16px;
+    animation: winnerBannerGlow 2s ease-in-out infinite, winnerBannerAppear 0.8s ease-out;
+    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+}
+
+.winner-crown {
+    font-size: 4rem;
+    margin-bottom: 8px;
+    animation: crownBounce 1.2s ease-in-out infinite;
+}
+
+.winner-title {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 4px;
+}
+
+.winner-name {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes winnerBannerGlow {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes winnerBannerAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes crownBounce {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-10px) scale(1.1);
+    }
+}
+
+/* Classifica completata: animazione righe in sequenza */
+.ranking-complete tbody tr {
+    animation: rankingRowAppear 0.5s ease-out both;
+}
+
+.ranking-complete tbody tr.tournament-winner-row {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.25), rgba(255, 165, 0, 0.12));
+    animation: rankingRowAppear 0.5s ease-out both, winnerRowPulse 2s ease-in-out 0.5s infinite;
+    border-left: 4px solid #FFD700;
+    font-weight: 700;
+}
+
+.ranking-complete tbody tr.tournament-winner-row td {
+    padding: 14px 12px;
+}
+
+@keyframes rankingRowAppear {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes winnerRowPulse {
+    0%, 100% {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.25), rgba(255, 165, 0, 0.12));
+    }
+    50% {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.35), rgba(255, 165, 0, 0.2));
+    }
+}
+
 .stats {
     color: var(--text-light);
     font-size: 0.9rem;

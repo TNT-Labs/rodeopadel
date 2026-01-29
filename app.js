@@ -346,10 +346,17 @@ function calculateStats() {
     return stats;
 }
 
+// Verifica se tutte le partite sono state confermate
+function areAllMatchesConfirmed() {
+    if (!state.matches || state.matches.length === 0) return false;
+    return state.matches.every(match => state.results[match.id]?.confirmed === true);
+}
+
 // Renderizza la classifica
 function renderRanking() {
     const stats = calculateStats();
     const container = document.getElementById('ranking-container');
+    const allComplete = areAllMatchesConfirmed();
     
     // Converti in array e ordina
     const ranking = Object.entries(stats)
@@ -366,9 +373,23 @@ function renderRanking() {
             return b.gameDifference - a.gameDifference;
         });
     
+    container.innerHTML = '';
+    
+    // Se tutte le partite sono finite, mostra banner vincitore animato
+    if (allComplete && ranking.length > 0) {
+        const winnerBanner = document.createElement('div');
+        winnerBanner.className = 'tournament-winner-banner';
+        winnerBanner.innerHTML = `
+            <div class="winner-crown">🏆</div>
+            <h3 class="winner-title">Vincitore del torneo</h3>
+            <p class="winner-name">${ranking[0].player}</p>
+        `;
+        container.appendChild(winnerBanner);
+    }
+    
     // Crea la tabella
     const table = document.createElement('table');
-    table.className = 'ranking-table';
+    table.className = 'ranking-table' + (allComplete ? ' ranking-complete' : '');
     
     // Header
     const thead = document.createElement('thead');
@@ -396,6 +417,13 @@ function renderRanking() {
         
         const diffSign = entry.gameDifference >= 0 ? '+' : '';
         
+        // Prima posizione = vincitore: classe speciale per animazione
+        if (index === 0 && allComplete) {
+            row.className = 'tournament-winner-row';
+        }
+        
+        row.style.animationDelay = allComplete ? `${index * 0.15}s` : '0s';
+        
         row.innerHTML = `
             <td>
                 <span class="rank-badge ${badgeClass}">${index + 1}</span>
@@ -409,7 +437,6 @@ function renderRanking() {
     });
     
     table.appendChild(tbody);
-    container.innerHTML = '';
     container.appendChild(table);
 }
 
