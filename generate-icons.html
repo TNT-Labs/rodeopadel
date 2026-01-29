@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generatore Icone PWA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generatore Icone PWA</h1>
+    <p>Questo tool genera le icone necessarie per la PWA.</p>
+    
+    <div>
+        <canvas id="icon192" width="192" height="192"></canvas>
+        <canvas id="icon512" width="512" height="512"></canvas>
+    </div>
+    
+    <div>
+        <button onclick="generateIcons()">Genera Icone</button>
+        <button onclick="downloadIcon(192)">Scarica 192x192</button>
+        <button onclick="downloadIcon(512)">Scarica 512x512</button>
+    </div>
+
+    <script>
+        function generateIcons() {
+            // Genera icona 192x192
+            const canvas192 = document.getElementById('icon192');
+            const ctx192 = canvas192.getContext('2d');
+            
+            // Sfondo
+            ctx192.fillStyle = '#2196F3';
+            ctx192.fillRect(0, 0, 192, 192);
+            
+            // Testo
+            ctx192.fillStyle = '#FFFFFF';
+            ctx192.font = 'bold 80px Arial';
+            ctx192.textAlign = 'center';
+            ctx192.textBaseline = 'middle';
+            ctx192.fillText('🏆', 96, 96);
+            
+            // Genera icona 512x512
+            const canvas512 = document.getElementById('icon512');
+            const ctx512 = canvas512.getContext('2d');
+            
+            // Sfondo
+            ctx512.fillStyle = '#2196F3';
+            ctx512.fillRect(0, 0, 512, 512);
+            
+            // Testo
+            ctx512.fillStyle = '#FFFFFF';
+            ctx512.font = 'bold 200px Arial';
+            ctx512.textAlign = 'center';
+            ctx512.textBaseline = 'middle';
+            ctx512.fillText('🏆', 256, 256);
+        }
+        
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`icon${size}`);
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Genera automaticamente al caricamento
+        window.onload = generateIcons;
+    </script>
+</body>
+</html>
