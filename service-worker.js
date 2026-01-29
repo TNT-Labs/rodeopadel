@@ -30,57 +30,85 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// Attivazione: pulizia cache vecchie
+// Attivazione: pulizia cache vecchie e notifica aggiornamento
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Rimozione cache vecchia:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
-    // Prendi il controllo immediato di tutte le pagine
-    return self.clients.claim();
-});
-
-// Fetch: strategia cache-first con fallback a network
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Ritorna dalla cache se disponibile
-                if (response) {
-                    return response;
-                }
-                
-                // Altrimenti, fai una richiesta di rete
-                return fetch(event.request).then((response) => {
-                    // Controlla se la risposta è valida
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
-                    }
-                    
-                    // Clona la risposta per la cache
-                    const responseToCache = response.clone();
-                    
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseToCache);
+        Promise.all([
+            // Pulisci cache vecchie
+            caches.keys().then((cacheNames) => {
+                return Promise.all(
+                    cacheNames.map((cacheName) => {
+                        if (cacheName !== CACHE_NAME) {
+                            console.log('Rimozione cache vecchia:', cacheName);
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            }),
+            // Prendi il controllo immediato di tutte le pagine
+            self.clients.claim(),
+            // Notifica tutte le pagine aperte per forzare il reload
+            self.clients.matchAll().then((clients) => {
+                clients.forEach((client) => {
+                    client.postMessage({
+                        type: 'SW_UPDATED',
+                        message: 'Nuova versione disponibile. Aggiornamento in corso...'
                     });
-                    
-                    return response;
                 });
             })
-            .catch(() => {
-                // Se sia cache che network falliscono, ritorna una pagina offline
-                if (event.request.destination === 'document') {
-                    const baseUrl = self.location.origin + self.location.pathname.replace(/service-worker\.js$/, '');
-                    return caches.match(baseUrl + 'index.html');
-                }
-            })
+        ])
     );
+});
+
+// Fetch: strategia network-first con fallback a cache (per garantire aggiornamenti)
+self.addEventListener('fetch', (event) => {
+    // Per le richieste HTML, preferisci sempre la rete per ottenere aggiornamenti
+    if (event.request.destination === 'document' || 
+        event.request.url.includes('index.html') ||
+        event.request.url.includes('.js') ||
+        event.request.url.includes('.css')) {
+        
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    // Se la richiesta di rete ha successo, aggiorna la cache
+                    if (response && response.status === 200) {
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    // Se la rete fallisce, usa la cache
+                    return caches.match(event.request);
+                })
+        );
+    } else {
+        // Per altre risorse, usa cache-first
+        event.respondWith(
+            caches.match(event.request)
+                .then((response) => {
+                    if (response) {
+                        return response;
+                    }
+                    return fetch(event.request).then((response) => {
+                        if (response && response.status === 200) {
+                            const responseToCache = response.clone();
+                            caches.open(CACHE_NAME).then((cache) => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        }
+                        return response;
+                    });
+                })
+                .catch(() => {
+                    if (event.request.destination === 'document') {
+                        const baseUrl = self.location.origin + self.location.pathname.replace(/service-worker\.js$/, '');
+                        return caches.match(baseUrl + 'index.html');
+                    }
+                })
+        );
+    }
 });

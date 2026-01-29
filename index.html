@@ -60,12 +60,54 @@
 
     <script src="app.js"></script>
     <script>
-        // Registrazione Service Worker
+        // Registrazione Service Worker con gestione aggiornamenti
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registrato'))
-                    .catch(err => console.log('Errore registrazione SW:', err));
+                navigator.serviceWorker.register('service-worker.js', {
+                    updateViaCache: 'none' // Forza il controllo degli aggiornamenti
+                })
+                .then(reg => {
+                    console.log('Service Worker registrato');
+                    
+                    // Controlla periodicamente per aggiornamenti
+                    setInterval(() => {
+                        reg.update();
+                    }, 60000); // Controlla ogni minuto
+                    
+                    // Rileva quando un nuovo service worker è disponibile
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        console.log('Nuovo Service Worker trovato');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Nuovo service worker installato, forza il reload
+                                console.log('Nuova versione disponibile. Ricarico la pagina...');
+                                window.location.reload();
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.log('Errore registrazione SW:', err));
+                
+                // Ascolta messaggi dal service worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'SW_UPDATED') {
+                        console.log(event.data.message);
+                        // Forza il reload quando viene notificato l'aggiornamento
+                        window.location.reload();
+                    }
+                });
+                
+                // Gestione cambio di service worker
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        refreshing = true;
+                        console.log('Service Worker cambiato. Ricarico la pagina...');
+                        window.location.reload();
+                    }
+                });
             });
         }
     </script>
