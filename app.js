@@ -129,14 +129,26 @@ function createMatchCard(match) {
     
     const result = state.results[match.id];
     
+    // Determina se la partita è completata e chi ha vinto
+    const score1 = parseInt(result.score1);
+    const score2 = parseInt(result.score2);
+    const isCompleted = result.score1 && result.score2 && !isNaN(score1) && !isNaN(score2) && score1 !== score2;
+    const team1Wins = isCompleted && score1 > score2;
+    const team2Wins = isCompleted && score2 > score1;
+    
+    // Icona vincitore
+    const winnerIcon = '<span class="winner-icon">🏆</span>';
+    
     card.innerHTML = `
         <div class="match-teams">
-            <div class="team">
+            <div class="team ${team1Wins ? 'winner' : ''}">
                 <span>${match.team1[0]} & ${match.team1[1]}</span>
+                ${team1Wins ? winnerIcon : ''}
             </div>
             <span class="vs">VS</span>
-            <div class="team">
+            <div class="team ${team2Wins ? 'winner' : ''}">
                 <span>${match.team2[0]} & ${match.team2[1]}</span>
+                ${team2Wins ? winnerIcon : ''}
             </div>
         </div>
         <div class="score-inputs">
