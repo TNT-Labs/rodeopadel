@@ -1,5 +1,5 @@
 // Service Worker per funzionamento offline
-const CACHE_NAME = 'torneo-2vs2-v2';
+const CACHE_NAME = 'torneo-2vs2-v3';
 
 // Funzione per ottenere i percorsi relativi alla root dell'app
 function getCacheUrls() {
@@ -112,4 +112,3 @@ self.addEventListener('fetch', (event) => {
         );
     }
 });
-

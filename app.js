@@ -373,16 +373,24 @@ function renderRanking() {
             return b.gameDifference - a.gameDifference;
         });
     
+    // Determina i vincitori: tutti i giocatori con punteggio massimo (stesse vittorie e diff. giochi del primo)
+    const firstPlace = ranking[0];
+    const winners = ranking.filter(
+        entry => entry.wins === firstPlace.wins && entry.gameDifference === firstPlace.gameDifference
+    );
+    
     container.innerHTML = '';
     
-    // Se tutte le partite sono finite, mostra banner vincitore animato
+    // Se tutte le partite sono finite, mostra banner vincitore/i animato
     if (allComplete && ranking.length > 0) {
         const winnerBanner = document.createElement('div');
         winnerBanner.className = 'tournament-winner-banner';
+        const titleText = winners.length === 1 ? 'Vincitore del torneo' : 'Vincitori del torneo';
+        const namesText = winners.map(w => w.player).join(', ');
         winnerBanner.innerHTML = `
             <div class="winner-crown">🏆</div>
-            <h3 class="winner-title">Vincitore del torneo</h3>
-            <p class="winner-name">${ranking[0].player}</p>
+            <h3 class="winner-title">${titleText}</h3>
+            <p class="winner-name">${namesText}</p>
         `;
         container.appendChild(winnerBanner);
     }
@@ -417,8 +425,9 @@ function renderRanking() {
         
         const diffSign = entry.gameDifference >= 0 ? '+' : '';
         
-        // Prima posizione = vincitore: classe speciale per animazione
-        if (index === 0 && allComplete) {
+        // Vincitore/i: tutti i giocatori a pari merito con il primo
+        const isWinner = winners.some(w => w.player === entry.player);
+        if (isWinner && allComplete) {
             row.className = 'tournament-winner-row';
         }
         
